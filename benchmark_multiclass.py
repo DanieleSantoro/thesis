@@ -9,25 +9,23 @@ from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
 
 """ Dataset and Metrics """
-from sklearn.datasets import load_digits
+from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.calibration import CalibratedClassifierCV, calibration_curve
+from sklearn.utils import resample
 from netcal.metrics import ECE
 
 """ Confidence Ensembles """
 from confens.classifiers.ConfidenceBoosting import ConfidenceBoosting as ConfidenceBoostingClassifier
 from confens.classifiers.ConfidenceBagging import ConfidenceBagging as ConfidenceBaggingClassifier
 
-def load_digit_dataset():
-    print("Loading Digits Dataset")
-    data = load_digits()
-    X = data.data
-    y = data.target
-
-    """ Normalising pixel values (0-16) in order to obtain values between [0, 1]"""
-    X = X / 16.0
-
+def load_fashion_mnist_dataset():
+    print("Loading Fashion-MNIST...")
+    X, y = fetch_openml('Fashion-MNIST', version=1, return_X_y=True, as_frame=False)
+    y = y.astype(int)
+    X, y = resample(X, y, n_samples=10000, random_state=42, stratify=y)
+    X = X / 255.0 # Normalizzazione
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
     return X_train, X_test, y_train, y_test
 
@@ -66,7 +64,7 @@ def plot_multiclass_reliability_aggregated(y_test, y_prob, name, ax):
 
 if __name__ == "__main__":
     # 1. Loading data
-    X_train, X_test, y_train, y_test = load_digit_dataset()
+    X_train, X_test, y_train, y_test = load_fashion_mnist_dataset()
     results = []
 
     fig, ax = plt.subplots(figsize=(10, 8))
